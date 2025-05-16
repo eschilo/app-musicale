@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>App di Notazione Musicale</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #e6f2ff;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 5px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .title-container {
+            text-align: center;
+            flex-grow: 1;
+        }
+        .tempo-container {
+            flex-basis: 25%;
+        }
+        .genre-container {
+            flex-basis: 25%;
+            text-align: right;
+        }
+        #song-title {
+            font-weight: bold;
+            text-decoration: underline;
+            font-size: 24px;
+            margin: 0;
+        }
+        .section {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+            position: relative;
+        }
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+        .section-type {
+            font-weight: bold;
+            color: #555;
+        }
+        .section-actions {
+            display: flex;
+            gap: 5px;
+        }
+        .section-content {
+            white-space: pre-wrap;
+            min-height: 50px;
+            padding: 5px;
+            border: 1px dashed #ddd;
+            border-radius: 3px;
+        }
+        .controls {
+            margin: 20px 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .control-group {
+            margin-bottom: 15px;
+            border: 1px solid #eee;
+            padding: 10px;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+        }
+        .control-label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            display: block;
+        }
+        button {
+            padding: 8px 12px;
+            background-color: #4c7caf;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        button:hover {
+            background-color: #3a5e85;
+        }
+        select, input {
+            padding: 6px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .chord-button {
+            padding: 5px 10px;
+            margin: 2px;
+            background-color: #6c9bd1;
+        }
+        .symbol-button {
+            padding: 5px 10px;
+            margin: 2px;
+            background-color: #d16c9b;
+        }
+        .export-buttons {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        #pdf-button {
+            background-color: #d14b4b;
+        }
+        #html-button {
+            background-color: #4bd17f;
+        }
+        .font-size-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        #font-size {
+            width: 60px;
+        }
+        .move-buttons {
+            display: flex;
+            gap: 5px;
+        }
+        .move-up, .move-down {
+            font-size: 16px;
+            padding: 2px 8px;
+        }
+        .staff-container {
+            margin: 10px 0;
+            position: relative;
+        }
+        .music-staff {
+            display: block;
+            width: 100%;
+            height: auto;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .clef-image {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            height: 80%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="tempo-container">
+                <label for="bpm">BPM:</label>
+                <input type="number" id="bpm" min="40" max="220" value="120" style="width: 60px;">
+                <select id="time-signature">
+                    <option value="4/4">4/4</option>
+                    <option value="3/4">3/4</option>
+                    <option value="6/8">6/8</option>
+                    <option value="2/4">2/4</option>
+                    <option value="5/4">5/4</option>
+                    <option value="7/8">7/8</option>
+                </select>
+            </div>
+            <div class="title-container">
+                <h1 id="song-title" contenteditable="true">Titolo del Brano</h1>
+            </div>
+            <div class="genre-container">
+                <label for="genre">Genere:</label>
+                <input type="text" id="genre" placeholder="Pop, Rock, Jazz...">
+            </div>
+        </div>
+
+        <div class="font-size-control">
+            <label for="font-size">Dimensione accordi:</label>
+            <input type="number" id="font-size" min="12" max="36" value="16" style="width: 60px;">
+            <button id="apply-font-size">Applica</button>
+        </div>
+
+        <div id="sections-container">
+            <!-- Le sezioni verranno inserite qui dinamicamente -->
+        </div>
+
+        <div class="controls">
+            <div class="control-group">
+                <div class="control-label">Aggiungi Sezione</div>
+                <select id="section-type">
+                    <option value="Intro">Intro</option>
+                    <option value="Verse">Strofa</option>
+                    <option value="Chorus">Ritornello</option>
+                    <option value="Bridge">Bridge</option>
+                    <option value="Outro">Outro</option>
+                    <option value="Solo">Solo</option>
+                    <option value="Interlude">Interludio</option>
+                    <option value="Custom">Personalizzata</option>
+                </select>
+                <button id="add-section">Aggiungi Sezione</button>
+            </div>
+
+            <div class="control-group">
+                <div class="control-label">Inserisci Accordi</div>
+                <div>
+                    <button class="chord-button" data-chord="C">C</button>
+                    <button class="chord-button" data-chord="D">D</button>
+                    <button class="chord-button" data-chord="E">E</button>
+                    <button class="chord-button" data-chord="F">F</button>
+                    <button class="chord-button" data-chord="G">G</button>
+                    <button class="chord-button" data-chord="A">A</button>
+                    <button class="chord-button" data-chord="B">B</button>
+                    <button class="chord-button" data-chord="Cm">Cm</button>
+                    <button class="chord-button" data-chord="Dm">Dm</button>
+                    <button class="chord-button" data-chord="Em">Em</button>
+                    <button class="chord-button" data-chord="Fm">Fm</button>
+                    <button class="chord-button" data-chord="Gm">Gm</button>
+                    <button class="chord-button" data-chord="Am">Am</button>
+                    <button class="chord-button" data-chord="Bm">Bm</button>
+                    <button class="chord-button" data-chord="C7">C7</button>
+                    <button class="chord-button" data-chord="D7">D7</button>
+                    <button class="chord-button" data-chord="E7">E7</button>
+                    <button class="chord-button" data-chord="F7">F7</button>
+                    <button class="chord-button" data-chord="G7">G7</button>
+                    <button class="chord-button" data-chord="A7">A7</button>
+                    <button class="chord-button" data-chord="B7">B7</button>
+                </div>
+                <div style="margin-top: 5px;">
+                    <button class="chord-button" data-chord="Cmaj7">Cmaj7</button>
+                    <button class="chord-button" data-chord="Dmaj7">Dmaj7</button>
+                    <button class="chord-button" data-chord="Fmaj7">Fmaj7</button>
+                    <button class="chord-button" data-chord="Gmaj7">Gmaj7</button>
+                    <button class="chord-button" data-chord="Amaj7">Amaj7</button>
+                    <button class="chord-button" data-chord="Csus4">Csus4</button>
+                    <button class="chord-button" data-chord="Dsus4">Dsus4</button>
+                    <button class="chord-button" data-chord="C#">C#</button>
+                    <button class="chord-button" data-chord="D#">D#</button>
+                    <button class="chord-button" data-chord="F#">F#</button>
+                    <button class="chord-button" data-chord="G#">G#</button>
+                    <button class="chord-button" data-chord="A#">A#</button>
+                    <button class="chord-button" data-chord="Bb">Bb</button>
+                    <button class="chord-button" data-chord="Eb">Eb</button>
+                    <button class="chord-button" data-chord="Ab">Ab</button>
+                </div>
+                <div style="margin-top: 10px;">
+                    <input type="text" id="custom-chord" placeholder="Accordo personalizzato">
+                    <button id="add-custom-chord">Aggiungi</button>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <div class="control-label">Simboli Musicali</div>
+                <div>
+                    <button class="symbol-button" data-symbol="|">Battuta |</button>
+                    <button class="symbol-button" data-symbol="||">Doppia battuta ||</button>
+                    <button class="symbol-button" data-symbol="|: ">Ripetizione inizio |:</button>
+                    <button class="symbol-button" data-symbol=" :|">Ripetizione fine :|</button>
+                    <button class="symbol-button" data-symbol=" :|x2">Ripetizione x2</button>
+                    <button class="symbol-button" data-symbol=" :|x3">Ripetizione x3</button>
+                    <button class="symbol-button" data-symbol=" :|x4">Ripetizione x4</button>
+                    <button class="symbol-button" data-symbol="♯">Diesis ♯</button>
+                    <button class="symbol-button" data-symbol="♭">Bemolle ♭</button>
+                    <button class="symbol-button" data-symbol="𝄋">Coda 𝄋</button>
+                    <button class="symbol-button" data-symbol="𝄌">Fine 𝄌</button>
+                    <button class="symbol-button" data-symbol="&#10;">Nuova linea</button>
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <div class="control-label">Pentagramma</div>
+                <button id="add-staff">Inserisci Pentagramma</button>
+                <select id="staff-clef">
+                    <option value="treble">Chiave di Violino</option>
+                    <option value="bass">Chiave di Basso</option>
+                </select>
+                <select id="staff-size">
+                    <option value="small">Piccolo</option>
+                    <option value="medium" selected>Medio</option>
+                    <option value="large">Grande</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="export-buttons">
+            <button id="pdf-button">Esporta in PDF</button>
+            <button id="html-button">Esporta in HTML</button>
+        </div>
+    </div>
+
+    <!-- Script per includere la libreria jsPDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <script>
+        let activeSection = null;
+        let sectionCounter = 0;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Aggiungi una prima sezione all'avvio
+            addSection('Intro');
+
+            // Event listener per aggiungere una sezione
+            document.getElementById('add-section').addEventListener('click', function() {
+                const sectionType = document.getElementById('section-type').value;
+                let customName = sectionType;
+                if (sectionType === 'Custom') {
+                    customName = prompt('Inserisci il nome della sezione personalizzata:') || 'Sezione';
+                }
+                addSection(customName);
+            });
+
+            // Event listener per gli accordi
+            document.querySelectorAll('.chord-button').forEach(button => {
+                button.addEventListener('click', function() {
+                    insertContent(this.getAttribute('data-chord') + ' ');
+                });
+            });
+
+            // Event listener per accordi personalizzati
+            document.getElementById('add-custom-chord').addEventListener('click', function() {
+                const customChord = document.getElementById('custom-chord').value.trim();
+                if (customChord) {
+                    insertContent(customChord + ' ');
+                    document.getElementById('custom-chord').value = '';
+                }
+            });
+
+            // Event listener per simboli musicali
+            document.querySelectorAll('.symbol-button').forEach(button => {
+                button.addEventListener('click', function() {
+                    insertContent(this.getAttribute('data-symbol'));
+                });
+            });
+
+            // Event listener per modificare la dimensione del font degli accordi
+            document.getElementById('apply-font-size').addEventListener('click', function() {
+                const fontSize = document.getElementById('font-size').value;
+                document.querySelectorAll('.section-content').forEach(section => {
+                    section.style.fontSize = fontSize + 'px';
+                });
+            });
+
+            // Event listener per esportare in PDF
+            document.getElementById('pdf-button').addEventListener('click', exportToPDF);
+
+            // Event listener per esportare in HTML
+            document.getElementById('html-button').addEventListener('click', exportToHTML);
+            
+            // Event listener per inserire pentagramma
+            document.getElementById('add-staff').addEventListener('click', function() {
+                insertStaff();
+            });
+
+            // Rendere il titolo modificabile
+            document.getElementById('song-title').addEventListener('blur', function() {
+                if (this.innerText.trim() === '') {
+                    this.innerText = 'Titolo del Brano';
+                }
+            });
+        });
+
+        function addSection(typeName) {
+            sectionCounter++;
+            const sectionId = 'section-' + sectionCounter;
+            
+            const section = document.createElement('div');
+            section.className = 'section';
+            section.id = sectionId;
+            
+            const header = document.createElement('div');
+            header.className = 'section-header';
+            
+            const sectionType = document.createElement('div');
+            sectionType.className = 'section-type';
+            sectionType.innerText = typeName;
+            sectionType.contentEditable = true;
+            
+            const sectionActions = document.createElement('div');
+            sectionActions.className = 'section-actions';
+            
+            const editButton = document.createElement('button');
+            editButton.innerText = 'Modifica';
+            editButton.addEventListener('click', function() {
+                setActiveSection(sectionId);
+            });
+            
+            const deleteButton = document.createElement('button');
+            deleteButton.innerText = 'Elimina';
+            deleteButton.addEventListener('click', function() {
+                if (confirm('Sei sicuro di voler eliminare questa sezione?')) {
+                    section.remove();
+                    if (activeSection === sectionId) {
+                        activeSection = null;
+                    }
+                }
+            });
+
+            const moveButtons = document.createElement('div');
+            moveButtons.className = 'move-buttons';
+            
+            const moveUpButton = document.createElement('button');
+            moveUpButton.className = 'move-up';
+            moveUpButton.innerText = '↑';
+            moveUpButton.title = 'Sposta su';
+            moveUpButton.addEventListener('click', function() {
+                const prevSection = section.previousElementSibling;
+                if (prevSection && prevSection.className === 'section') {
+                    section.parentNode.insertBefore(section, prevSection);
+                }
+            });
+            
+            const moveDownButton = document.createElement('button');
+            moveDownButton.className = 'move-down';
+            moveDownButton.innerText = '↓';
+            moveDownButton.title = 'Sposta giù';
+            moveDownButton.addEventListener('click', function() {
+                const nextSection = section.nextElementSibling;
+                if (nextSection) {
+                    section.parentNode.insertBefore(nextSection, section);
+                }
+            });
+            
+            moveButtons.appendChild(moveUpButton);
+            moveButtons.appendChild(moveDownButton);
+            
+            sectionActions.appendChild(editButton);
+            sectionActions.appendChild(deleteButton);
+            sectionActions.appendChild(moveButtons);
+            
+            header.appendChild(sectionType);
+            header.appendChild(sectionActions);
+            
+            const content = document.createElement('div');
+            content.className = 'section-content';
+            content.contentEditable = true;
+            content.style.fontSize = document.getElementById('font-size').value + 'px';
+            
+            section.appendChild(header);
+            section.appendChild(content);
+            
+            document.getElementById('sections-container').appendChild(section);
+            
+            setActiveSection(sectionId);
+            return sectionId;
+        }
+
+        function setActiveSection(sectionId) {
+            // Rimuovi lo stile di sezione attiva da tutte le sezioni
+            document.querySelectorAll('.section').forEach(section => {
+                section.style.boxShadow = 'none';
+            });
+            
+            // Imposta la nuova sezione attiva
+            activeSection = sectionId;
+            const section = document.getElementById(sectionId);
+            section.style.boxShadow = '0 0 0 2px #4c7caf';
+            
+            // Metti il focus sulla sezione
+            section.querySelector('.section-content').focus();
+        }
+
+        function insertContent(content) {
+            if (!activeSection) {
+                alert('Seleziona prima una sezione!');
+                return;
+            }
+            
+            const sectionContent = document.getElementById(activeSection).querySelector('.section-content');
+            sectionContent.focus();
+            
+            if (typeof window.getSelection !== "undefined") {
+                const sel = window.getSelection();
+                if (sel.getRangeAt && sel.rangeCount) {
+                    const range = sel.getRangeAt(0);
+                    range.deleteContents();
+                    
+                    const textNode = document.createTextNode(content);
+                    range.insertNode(textNode);
+                    
+                    // Muovi il cursore alla fine dell'inserimento
+                    range.setStartAfter(textNode);
+                    range.setEndAfter(textNode);
+                    sel.removeAllRanges();
+                    sel.addRange(range);
+                }
+            } else if (document.selection && document.selection.createRange) {
+                document.selection.createRange().text = content;
+            }
+        }
+
+        function exportToPDF() {
+            try {
+                const { jsPDF } = window.jspdf;
+                const container = document.querySelector('.container');
+                
+                // Rimuoviamo l'approccio con clonedContainer e creiamo un div semplificato
+                const printContent = document.createElement('div');
+                printContent.style.backgroundColor = '#ffffff';
+                printContent.style.padding = '20px';
+                printContent.style.width = '800px';
+                
+                // Aggiungiamo il titolo
+                const titleDiv = document.createElement('h1');
+                titleDiv.style.textAlign = 'center';
+                titleDiv.style.fontWeight = 'bold';
+                titleDiv.style.textDecoration = 'underline';
+                titleDiv.style.fontSize = '24px';
+                titleDiv.style.margin = '0 0 20px 0';
+                titleDiv.textContent = document.getElementById('song-title').innerText;
+                printContent.appendChild(titleDiv);
+                
+                // Info aggiuntive
+                const infoDiv = document.createElement('div');
+                infoDiv.style.display = 'flex';
+                infoDiv.style.justifyContent = 'space-between';
+                infoDiv.style.marginBottom = '20px';
+                
+                const tempoInfo = document.createElement('div');
+                tempoInfo.textContent = 'BPM: ' + document.getElementById('bpm').value + ' - ' + 
+                                      document.getElementById('time-signature').value;
+                
+                const genreInfo = document.createElement('div');
+                genreInfo.textContent = 'Genere: ' + document.getElementById('genre').value;
+                
+                infoDiv.appendChild(tempoInfo);
+                infoDiv.appendChild(genreInfo);
+                printContent.appendChild(infoDiv);
+                
+                // Aggiungiamo le sezioni
+                document.querySelectorAll('.section').forEach(section => {
+                    const sectionDiv = document.createElement('div');
+                    sectionDiv.style.border = '1px solid #ccc';
+                    sectionDiv.style.padding = '10px';
+                    sectionDiv.style.marginBottom = '15px';
+                    sectionDiv.style.borderRadius = '4px';
+                    
+                    const sectionTitle = document.createElement('div');
+                    sectionTitle.style.fontWeight = 'bold';
+                    sectionTitle.style.color = '#555';
+                    sectionTitle.style.marginBottom = '8px';
+                    sectionTitle.textContent = section.querySelector('.section-type').textContent;
+                    
+                    const sectionContent = document.createElement('div');
+                    sectionContent.style.whiteSpace = 'pre-wrap';
+                    sectionContent.style.border = '1px dashed #ddd';
+                    sectionContent.style.borderRadius = '3px';
+                    sectionContent.style.padding = '5px';
+                    sectionContent.style.fontSize = document.getElementById('font-size').value + 'px';
+                    sectionContent.textContent = section.querySelector('.section-content').textContent;
+                    
+                    sectionDiv.appendChild(sectionTitle);
+                    sectionDiv.appendChild(sectionContent);
+                    printContent.appendChild(sectionDiv);
+                });
+                
+                // Aggiungi l'elemento al DOM
+                document.body.appendChild(printContent);
+                printContent.style.position = 'absolute';
+                printContent.style.left = '-9999px';
+                
+                // Genera il PDF direttamente senza utilizzare html2canvas
+                setTimeout(() => {
+                    try {
+                        const doc = new jsPDF('p', 'mm', 'a4');
+                        const title = document.getElementById('song-title').innerText.trim() || 'Spartito_Musicale';
+                        
+                        // Aggiungi il titolo al PDF
+                        doc.setFontSize(20);
+                        doc.text(title, 105, 20, { align: 'center' });
+                        
+                        // Aggiungi le informazioni di BPM e genere
+                        doc.setFontSize(12);
+                        doc.text('BPM: ' + document.getElementById('bpm').value + ' - ' + 
+                                document.getElementById('time-signature').value, 20, 30);
+                        doc.text('Genere: ' + document.getElementById('genre').value, 160, 30, { align: 'right' });
+                        
+                        // Aggiungi le sezioni
+                        let yPos = 40;
+                        document.querySelectorAll('.section').forEach(section => {
+                            // Se siamo vicini al fondo pagina, aggiungi una nuova pagina
+                            if (yPos > 260) {
+                                doc.addPage();
+                                yPos = 20;
+                            }
+                            
+                            // Aggiungi intestazione sezione
+                            doc.setFontSize(14);
+                            doc.setFont(undefined, 'bold');
+                            const sectionTitle = section.querySelector('.section-type').textContent;
+                            doc.text(sectionTitle, 20, yPos);
+                            yPos += 8;
+                            
+                            // Aggiungi contenuto sezione
+                            doc.setFontSize(12);
+                            doc.setFont(undefined, 'normal');
+                            const content = section.querySelector('.section-content').textContent;
+                            
+                            // Suddividi il contenuto in righe per impedire che esca dai bordi
+                            const contentLines = doc.splitTextToSize(content, 170);
+                            doc.text(contentLines, 20, yPos);
+                            
+                            // Calcola l'altezza del testo + margine
+                            yPos += contentLines.length * 7 + 10;
+                        });
+                        
+                        doc.save(title + '.pdf');
+                    } catch (err) {
+                        console.error('Errore nella generazione del PDF:', err);
+                        alert('Si è verificato un errore durante la generazione del PDF: ' + err.message);
+                    }
+                    
+                    // Rimuovi l'elemento temporaneo
+                    document.body.removeChild(printContent);
+                }, 500);
+                
+            } catch (err) {
+                console.error('Errore generale nell\'esportazione PDF:', err);
+                alert('Si è verificato un errore nell\'esportazione: ' + err.message);
+            }
+        }
+
+        function exportToHTML() {
+            // Clona il contenitore principale
+            const container = document.querySelector('.container');
+            const clonedContainer = container.cloneNode(true);
+            
+            // Rimuovi i pulsanti e controlli non necessari
+            clonedContainer.querySelectorAll('.controls, .export-buttons, .section-actions, .font-size-control').forEach(el => {
+                el.remove();
+            });
+            
+            // Crea un nuovo documento HTML
+            const htmlContent = `
+            <!DOCTYPE html>
+            <html lang="it">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>${document.getElementById('song-title').innerText}</title>
+                <style>
+                    body {
+                        font-family: 'Arial', sans-serif;
+                        margin: 0;
+                        padding: 20px;
+                        background-color: #f5f5f5;
+                    }
+                    .container {
+                        max-width: 800px;
+                        margin: 0 auto;
+                        background-color: white;
+                        padding: 20px;
+                        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+                        border-radius: 5px;
+                    }
+                    .header {
+                        display: flex;
+                        justify-content: space-between;
+                        margin-bottom: 20px;
+                    }
+                    .title-container {
+                        text-align: center;
+                        flex-grow: 1;
+                    }
+                    .tempo-container {
+                        flex-basis: 25%;
+                    }
+                    .genre-container {
+                        flex-basis: 25%;
+                        text-align: right;
+                    }
+                    #song-title {
+                        font-weight: bold;
+                        text-decoration: underline;
+                        font-size: 24px;
+                        margin: 0;
+                    }
+                    .section {
+                        border: 1px solid #ccc;
+                        padding: 10px;
+                        margin-bottom: 15px;
+                        border-radius: 4px;
+                    }
+                    .section-header {
+                        margin-bottom: 8px;
+                    }
+                    .section-type {
+                        font-weight: bold;
+                        color: #555;
+                    }
+                    .section-content {
+                        white-space: pre-wrap;
+                        padding: 5px;
+                        border: 1px dashed #ddd;
+                        border-radius: 3px;
+                    }
+                </style>
+            </head>
+            <body>
+                ${clonedContainer.outerHTML}
+            </body>
+            </html>
+            `;
+            
+            // Crea un blob con il contenuto HTML
+            const blob = new Blob([htmlContent], { type: 'text/html' });
+            
+            // Crea un URL per il blob e scaricalo
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            const title = document.getElementById('song-title').innerText.trim() || 'Spartito_Musicale';
+            a.download = title + '.html';
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        }
+    </script>
+</body>
+</html>
